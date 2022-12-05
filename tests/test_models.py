@@ -6,8 +6,10 @@ import logging
 import unittest
 import os
 from service import app
-from service.models import Account, DataValidationError, db
+from service.models import Account, DataValidationError, db, PersistentBase
 from tests.factories import AccountFactory
+import factory
+from datetime import date
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
@@ -175,3 +177,23 @@ class TestAccount(unittest.TestCase):
         """It should not Deserialize an account with a TypeError"""
         account = Account()
         self.assertRaises(DataValidationError, account.deserialize, [])
+
+    def test_print_an_account(self):
+        """It should Serialize an account"""
+        account = AccountFactory()
+        self.assertEqual(str(account), f"<Account {account.name} id=[{account.id}]>")
+    
+
+    def test_date_joined_account(self):
+        """It should Serialize an account"""
+        new_account = Account()
+        new_account.deserialize({
+            "name":factory.Faker("name"),
+            "email":factory.Faker("email"),
+            "address":factory.Faker("address"),
+            "phone_number":factory.Faker("phone_number")})
+        self.assertEqual(new_account.date_joined, date.today())
+
+    def test_persistentbase_init_id(self):
+        base = PersistentBase()
+        self.assertEqual(base.id, None)
